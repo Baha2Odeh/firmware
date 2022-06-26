@@ -1,8 +1,11 @@
 import React, { useRef } from "react";
 import useSWR from "swr";
 import {
+  Alert,
   Tooltip,
   Space,
+  Row,
+  Col,
   Input,
   Table,
   Layout,
@@ -112,6 +115,14 @@ const App = () => {
       dataIndex: "firmwareVersion",
       key: "firmwareVersion",
       ...getColumnSearchProps("firmwareVersion"),
+      sorter({ firmwareVersion: a }, { firmwareVersion: b }) {
+        return a.localeCompare(b, undefined, { numeric: true });
+      },
+      render: (b, a) => (
+        <Button type="link" href={a.downloadUrl}>
+          {a.firmwareVersion}
+        </Button>
+      ),
     },
     {
       title: "Security Version",
@@ -126,22 +137,6 @@ const App = () => {
       key: "signature",
       ellipsis: true,
       ...getColumnSearchProps("signature"),
-    },
-    {
-      width: "5%",
-      title: "",
-      dataIndex: "downloadUrl",
-      key: "downloadUrl",
-      render: (r) => (
-        <Tooltip title="download">
-          <Button
-            href={r}
-            type="primary"
-            shape="circle"
-            icon={<DownloadOutlined />}
-          />
-        </Tooltip>
-      ),
     },
   ];
 
@@ -163,6 +158,32 @@ const App = () => {
         text: n,
         value: n,
       }));
+
+    columns.push({
+      title: "Matching APE",
+      dataIndex: "apeSig",
+      key: "apeSig",
+      render: (b, a) => {
+        const matches =
+          response.filter((c) =>
+            [a.apeSig, a.apeSig25, a.apeSig3].includes(c.signature)
+          ) || [];
+
+        return (
+          <>
+            {Array.isArray(matches) &&
+              matches.map((match) => (
+                <>
+                  <Button type="link" href={match.downloadUrl}>
+                    {match.firmwareVersion}
+                  </Button>
+                  <br />
+                </>
+              ))}
+          </>
+        );
+      },
+    });
   }
 
   const windowWidth = useWindowWidth();
@@ -180,6 +201,9 @@ const App = () => {
           <Menu.Item key="bulletins">
             <a href="/docs/bulletins/">Service Bulletins</a>
           </Menu.Item>
+          <Menu.Item key="articles">
+            <a href="/articles.html">Toolbox Articles</a>
+          </Menu.Item>
           <Menu.Item key="s">
             <a href="/model-s.html">Model S</a>
           </Menu.Item>
@@ -190,13 +214,33 @@ const App = () => {
             <a href="/model-x.html">Model X</a>
           </Menu.Item>
           <Menu.Item key="Y">
-            <a href="/protected-doc/ModelY/CircuitDiag/2020.1_ModelY-LHD-SOP.pdf">
-              Model Y
-            </a>
+            <a href="/model-y.html">Model Y</a>
+          </Menu.Item>
+          <Menu.Item key="R">
+            <a href="/custom/Roadster">Roadster</a>
           </Menu.Item>
         </Menu>
       </Sider>
       <Layout>
+        <Row justify="center" style={{ marginTop: 20 }}>
+          <Col>
+            <Alert
+              description="If you like the content and would like to support the hosting and future updates, please consider sponsoring Lunars on Github "
+              type="info"
+              action={
+                <Button
+                  href="https://github.com/sponsors/Lunars"
+                  target="_BLANK"
+                  type="primary"
+                >
+                  ♥ Sponsor
+                </Button>
+              }
+              closable
+            />
+          </Col>
+        </Row>
+
         <Content style={{ margin: "24px 16px 0" }}>
           <div style={{ padding: 24, background: "#fff", minHeight: 360 }}>
             <Table
@@ -204,9 +248,7 @@ const App = () => {
               loading={loading}
               expandedRowRender={(record) => (
                 <Paragraph>
-                  <Text code copyable>
-                    {JSON.stringify(record, null, 2)}
-                  </Text>
+                  <pre>{JSON.stringify(record, null, 2)}</pre>
                 </Paragraph>
               )}
               rowKey={"signature"}
