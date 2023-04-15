@@ -54,7 +54,7 @@ export function FirmwareTable() {
   if (!data) return <Spin spinning size="large" />;
 
   const dataWithFileType = data.map((item: FirmwareItem) => {
-    const fileType = item.firmwareVersion.split(".").pop();
+    const fileType = item.downloadUrl.split(".").pop();
     const firmwareDate = new Date(item.firmwareDate);
     return { ...item, fileType, firmwareDate };
   });
